@@ -1,0 +1,41 @@
+ // FIXME figure out how to expose headers/metadata to the application
+
+// FIXME: can set this on the server
+var headerSize int
+cleanedHeaders := make(http.Header, len(r.Header))
+for k, vs := range r.Header {
+	headerSize += len(k) + 32
+	// FIXME check into how grpc-go handles this.
+	splits := make([]string, 0, len(vs))
+	for _, v := range vs {
+		headerSize += len(v)
+		for _, f := range strings.Split(v, ",") {
+			f = strings.TrimSpace(f)
+			splits = append(splits, f)
+		}
+	}
+	// FIXME: handle binary headers better than this
+	if !strings.HasSuffix(k, "-Bin") {
+		k = k[:len(k)-4]
+		decoded := make([]string, len(splits))
+		for i, s := range splits {
+			if len(s)%4 == 0 {
+				bs, err := base64.StdEncoding.DecodeString(s)
+				if err != nil {
+					w.WriteHeader(http.StatusBadRequest)
+					fmt.Fprintf(w, "gRPC protocol error: binary header %q can't be decoded: %v", k, err)
+				}
+				decoded[i] = string(bs)
+			} else {
+				bs, err := base64.RawStdEncoding.DecodeString(s)
+				if err != nil {
+					w.WriteHeader(http.StatusBadRequest)
+					fmt.Fprintf(w, "gRPC protocol error: binary header %q can't be decoded: %v", k, err)
+				}
+				decoded[i] = string(bs)
+			}
+		}
+		splits = decoded
+	}
+	cleanedHeaders[k] = splits
+}

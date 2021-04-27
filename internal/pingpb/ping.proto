@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package rerpc.ping.v0;
+
+option go_package = "pingpb";
+
+message PingRequest {
+    int64 number = 1;
+}
+
+message PingResponse {
+    int64 number = 2;
+}
+
+message FailRequest {
+    int64 code = 1;
+}
+
+message FailResponse {
+}
+
+service Ping {
+    rpc Ping(PingRequest) returns (PingResponse) {}
+    rpc Fail(FailRequest) returns (FailResponse) {}
+}
