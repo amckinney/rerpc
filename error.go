@@ -196,3 +196,32 @@ func (te *twirpError) Unwrap() error {
 func (te *twirpError) TwirpCode() string {
 	return te.code
 }
+
+// IsUnknownPathError returns true if the given error is an unknownPathError.
+func IsUnknownPathError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return errors.Is(err, &unknownPathError{})
+}
+
+type unknownPathError struct {
+	path string
+}
+
+// NewUnknownPathError returns a new unknown path error.
+func NewUnknownPathError(path string) error {
+	// TODO(alex): We probably want to return a structured *rpc.Error here.
+	return &unknownPathError{
+		path: path,
+	}
+}
+
+func (u *unknownPathError) Error() string {
+	return fmt.Sprintf("unknown path: %q", u.path)
+}
+
+func (u *unknownPathError) Is(err error) bool {
+	_, ok := err.(*unknownPathError)
+	return ok
+}

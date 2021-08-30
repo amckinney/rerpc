@@ -13,20 +13,36 @@ const (
 )
 
 // Specification is a description of a client call or a handler invocation.
-//
-// Note that the Method, Service, and Package are protobuf names, not Go import
-// paths or identifiers.
 type Specification struct {
-	Type    StreamType
+	Type        StreamType
+	Path        string
+	ContentType string
+
+	// TODO(alex): With the changes introduced here, the following
+	// fields could be removed from the Specification since they
+	// are transport-specific details. Instead, they are attached to
+	// the individual ClientProtocol and HTTPServerProtocols.
+	ReadMaxBytes int64
+
+	// This still belongs here.
+	RequestCompression  string
+	ResponseCompression string
+
+	// TODO(alex): Decoupling the Package, Service, and Method fields shouldn't
+	// be necessary, even for configuring Interceptors, since users
+	// will probably want to configure things on a per-endpoint basis
+	// anyway.
+	//
+	//  # config.yaml
+	//  interceptors:
+	//    acme.foo.v1.FooService/Bar:
+	//      - ...
+	//      - ...
+	//
+	// If we still feel strongly about this decoupling, we should discuss.
 	Package string // protobuf name, e.g. "acme.foo.v1"
 	Service string // protobuf name, e.g. "FooService"
 	Method  string // protobuf name, e.g. "Bar"
-
-	Path                string
-	ContentType         string
-	RequestCompression  string
-	ResponseCompression string
-	ReadMaxBytes        int64
 }
 
 // Metadata provides a Specification and access to request and response headers
